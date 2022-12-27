@@ -1,0 +1,75 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+dockers:
+  - image_templates:
+      - "ghcr.io/ueckoken/discotp:latest-amd64"
+      - "ghcr.io/ueckoken/discotp:{{ .Tag }}-amd64"
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}-amd64"
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}.{{ .Minor }}-amd64"
+    use: buildx
+    goos: linux
+    goarch: amd64
+    build_flag_templates:
+      - --platform=linux/amd64
+    dockerfile: 'dockerfiles/release/Dockerfile'
+  - image_templates:
+      - "ghcr.io/ueckoken/discotp:latest-arm64"
+      - "ghcr.io/ueckoken/discotp:{{ .Tag }}-arm64"
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}-arm64"
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}.{{ .Minor }}-arm64"
+    use: buildx
+    goos: linux
+    goarch: arm64
+    build_flag_templates:
+      - --platform=linux/arm64
+    dockerfile: 'dockerfiles/release/Dockerfile'
+docker_manifests:
+  - name_template: "ghcr.io/ueckoken/discotp:latest"
+    image_templates:
+      - "ghcr.io/ueckoken/discotp:latest-amd64"
+      - "ghcr.io/ueckoken/discotp:latest-arm64"
+  - name_template: "ghcr.io/ueckoken/discotp:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/ueckoken/discotp:{{ .Tag }}-amd64"
+      - "ghcr.io/ueckoken/discotp:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/ueckoken/discotp:v{{ .Major }}"
+    image_templates:
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}-amd64"
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}-arm64"
+  - name_template: "ghcr.io/ueckoken/discotp:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/ueckoken/discotp:v{{ .Major }}.{{ .Minor }}-arm64"
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+# modelines, feel free to remove those if you don't want/use them:
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
