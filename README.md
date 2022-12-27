@@ -16,11 +16,12 @@ this application is OTP(One Time Password) client works as Discord app.
 
 以下の環境変数を設定してください。
 
-|キー|値|
-|`DISCORD_APP_TOKEN`|DiscordのBotトークン|
-|`DISCORD_GUILD_ID`|DiscordのGuildIDです。|
-|`ALLOWRD_REPLY_CHANNEL_IDS`|メッセージの返答を許可するチャンネルのIDです。分割文字は`,`で複数設定できます|
-|`GOOGLE_TOTP_TOKEN`|GoogleのTOTPトークンです。「QRコードを読み取れない」のような場所をクリックすると取得できます|
+| キー                        | 値                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `DISCORD_APP_TOKEN`         | Discord の Bot トークン                                                                          |
+| `DISCORD_GUILD_ID`          | Discord の GuildID です。                                                                        |
+| `ALLOWRD_REPLY_CHANNEL_IDS` | メッセージの返答を許可するチャンネルの ID です。分割文字は`,`で複数設定できます                  |
+| `GOOGLE_TOTP_TOKEN`         | Google の TOTP トークンです。「QR コードを読み取れない」のような場所をクリックすると取得できます |
 
 ### リリース方法
 
