@@ -4,9 +4,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/caarlos0/env/v6"
+	"github.com/samber/lo"
 	"go.uber.org/zap"
 )
 
@@ -15,10 +17,28 @@ type Config struct {
 	AllowChannelIDs []string `env:"ALLOWED_REPLY_CHANNEL_IDS"`
 	DiscordGuildID  string   `env:"DISCORD_GUILD_ID"`
 	IsDevelopment   bool     `env:"IS_DEVELOPMENT" envDefault:"false"`
-	Google          totpTok  `env:"GOOGLE_TOTP_TOKEN"`
+	Tokens          TotpToks `env:"TOTP_TOKENS"`
 }
 
 type totpTok string
+type service string
+type TotpToks struct {
+	m map[service]totpTok
+}
+
+func (t *TotpToks) UnmarshalText(text []byte) error {
+	type kv struct {
+		k service
+		v totpTok
+	}
+	ress := lo.Map(strings.Split(string(text), `,`), func(item string, index int) kv {
+		ss := lo.Map(strings.SplitN(item, `:`, 2), func(item string, index int) string { return strings.TrimSpace(item) })
+		return kv{k: service(ss[0]), v: totpTok(ss[1])}
+	})
+	t.m = lo.Associate(ress, func(item kv) (service, totpTok) { return item.k, item.v })
+	return nil
+}
+func (s service) String() string { return string(s) }
 
 func main() {
 	config := &Config{}
@@ -26,16 +46,13 @@ func main() {
 		log.Print(err)
 		log.Fatalln("parse config failed")
 	}
-	logger, err := func(isDevel bool) (*zap.Logger, error) {
+	logger := func(isDevel bool) *zap.Logger {
 		if isDevel {
-			return zap.NewDevelopment()
+			return zap.Must(zap.NewDevelopment())
 		}
-		return zap.NewProduction()
+		return zap.Must(zap.NewProduction())
 	}(config.IsDevelopment)
-	if err != nil {
-		log.Fatalln("logger init failed")
-	}
-	logger.Info("logger init finish")
+	logger.Info("logger init finish", zap.Stringer("loglevel", logger.Level()))
 	discordSession, err := discordgo.New("Bot " + config.DiscordToken)
 	if err != nil {
 		logger.Fatal("discord go client init failed", zap.Error(err))
@@ -49,9 +66,10 @@ func main() {
 	logger.Info("session opened")
 	defer discordSession.Close()
 
-	appCmd, err := NewApplicationCommand(discordSession, config.DiscordGuildID)
+	totpHandler := NewTotpHandler(logger, *config)
+	appCmd, err := totpHandler.CreateTotpApplicationCommand(discordSession, config.DiscordGuildID)
 	if err != nil {
-		logger.Fatal("message create failed", zap.Error(err))
+		logger.Fatal("message create failed", zap.Error(err), zap.String("apply command", appCmd.Name))
 		return
 	}
 	_, err = discordSession.ApplicationCommandCreate(discordSession.State.User.ID, config.DiscordGuildID, appCmd)
