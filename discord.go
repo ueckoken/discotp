@@ -13,7 +13,6 @@ import (
 type TotpHandler struct {
 	logger *zap.Logger
 	config Config
-	// svcs   TotpToks
 }
 
 func (h *TotpHandler) CreateTotpApplicationCommand(s *discordgo.Session, guildID string) (*discordgo.ApplicationCommand, error) {
@@ -94,6 +93,7 @@ func IntractionCreateHandlerRouter(logger *zap.Logger, config Config, cmdName st
 		handler := &TotpHandler{logger: logger, config: config}
 		return handler.HandleIntractionCreate, nil
 	default:
+		logger.Error("unknown interaction create", zap.String("cmdName", cmdName))
 		return nil, fmt.Errorf("no route to handler")
 	}
 }
