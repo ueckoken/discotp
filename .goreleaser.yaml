@@ -13,13 +13,26 @@ builds:
       - linux
       - windows
       - darwin
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+      - arm
+      - "386"
+    goarm:
+      - 6
+      - 7
 archives:
   - replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
+      freebsd: FreeBSD
       386: i386
       amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
 dockers:
   - image_templates:
       - "ghcr.io/ueckoken/discotp:latest-amd64"
@@ -31,7 +44,7 @@ dockers:
     goarch: amd64
     build_flag_templates:
       - --platform=linux/amd64
-    dockerfile: 'dockerfiles/release/Dockerfile'
+    dockerfile: "dockerfiles/release/Dockerfile"
   - image_templates:
       - "ghcr.io/ueckoken/discotp:latest-arm64"
       - "ghcr.io/ueckoken/discotp:{{ .Tag }}-arm64"
@@ -42,7 +55,7 @@ dockers:
     goarch: arm64
     build_flag_templates:
       - --platform=linux/arm64
-    dockerfile: 'dockerfiles/release/Dockerfile'
+    dockerfile: "dockerfiles/release/Dockerfile"
 docker_manifests:
   - name_template: "ghcr.io/ueckoken/discotp:latest"
     image_templates:
