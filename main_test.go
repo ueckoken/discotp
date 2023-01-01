@@ -44,10 +44,18 @@ func TestTotpToksUnmarshalText(t *testing.T) {
 			out:       TotpToks{m: nil},
 			expectErr: true,
 		},
+		"multi input with inner spaces": {
+			in: []byte(`hoge:xxxxx xxxxx xxxxx, fuga: yyyyy yyyyy yyyyy`),
+			out: TotpToks{map[service]totpTok{
+				"hoge": "xxxxx xxxxx xxxxx",
+				"fuga": "yyyyy yyyyy yyyyy",
+			},
+			},
+			expectErr: false,
+		},
 	}
 	for k, v := range testCases {
 		t.Run(k, func(t *testing.T) {
-			t.Parallel()
 			var buf TotpToks
 			err := buf.UnmarshalText(v.in)
 			if v.expectErr {
