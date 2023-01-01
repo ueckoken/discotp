@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,6 +16,13 @@ type TotpHandler struct {
 	config Config
 }
 
+func NewTotpHandler(logger *zap.Logger, config Config) *TotpHandler {
+	return &TotpHandler{
+		logger: logger,
+		config: config,
+	}
+}
+
 func (h *TotpHandler) CreateTotpApplicationCommand(s *discordgo.Session, guildID string) (*discordgo.ApplicationCommand, error) {
 	opts := lo.Map(lo.Keys(h.config.Tokens.m), func(item service, index int) *discordgo.ApplicationCommandOption {
 		return &discordgo.ApplicationCommandOption{
@@ -25,18 +33,12 @@ func (h *TotpHandler) CreateTotpApplicationCommand(s *discordgo.Session, guildID
 	})
 	return s.ApplicationCommandCreate(s.State.User.ID, guildID, &discordgo.ApplicationCommand{
 		Name:        "2fa",
-		Description: "get 2fa code",
+		Description: "2faコードを取得することができます",
 		Type:        discordgo.ChatApplicationCommand,
 		Options:     opts,
 	})
 }
 
-func NewTotpHandler(logger *zap.Logger, config Config) *TotpHandler {
-	return &TotpHandler{
-		logger: logger,
-		config: config,
-	}
-}
 func (h *TotpHandler) HandleIntractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	h.logger.Debug("channel IDs", zap.Strings("channel IDs", h.config.AllowChannelIDs), zap.String("channel ID", i.ChannelID))
 	if !lo.Contains(h.config.AllowChannelIDs, i.ChannelID) {
@@ -56,10 +58,10 @@ func (h *TotpHandler) HandleIntractionCreate(s *discordgo.Session, i *discordgo.
 		h.logger.Warn("svc not found", zap.String("service name", i.ApplicationCommandData().Name))
 		return fmt.Errorf("not exist sub command")
 	}
-	totpClient = &totpGen{secret: string(tok)}
+	totpClient = &TotpGen{secret: string(tok)}
 	code, err := totpClient.GenerateCode(time.Now())
 	if err != nil {
-		h.logger.Error("generate code error", zap.Error(err))
+		h.logger.Error("generate code error", zap.Error(err), zap.String("serviceName", svcName))
 		return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -70,7 +72,7 @@ func (h *TotpHandler) HandleIntractionCreate(s *discordgo.Session, i *discordgo.
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("%sの2faコードは`%s`です\n", svcName, code),
+			Content: fmt.Sprintf("2faコードは`%s`です\n", code),
 		},
 	})
 }
@@ -79,12 +81,16 @@ type TotpClient interface {
 	GenerateCode(t time.Time) (string, error)
 }
 
-type totpGen struct {
+type TotpGen struct {
 	secret string
 }
 
-func (g *totpGen) GenerateCode(t time.Time) (string, error) {
-	return totp.GenerateCode(g.secret, t)
+func (g *TotpGen) GenerateCode(t time.Time) (string, error) {
+
+	return totp.GenerateCode(trimInnerWhite(g.secret), t)
+}
+func trimInnerWhite(secret string) string {
+	return strings.Join(strings.Fields(secret), ``)
 }
 
 func IntractionCreateHandlerRouter(logger *zap.Logger, config Config, cmdName string) (func(s *discordgo.Session, i *discordgo.InteractionCreate) error, error) {

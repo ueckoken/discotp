@@ -1,3 +1,3 @@
 FROM gcr.io/distroless/static-debian11:nonroot
-COPY discotp /
+COPY --chown=nonroot:nonroot discotp /
 ENTRYPOINT [ "/discotp" ]

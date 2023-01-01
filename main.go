@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -31,14 +32,19 @@ func (t *TotpToks) UnmarshalText(text []byte) error {
 		k service
 		v totpTok
 	}
-	ress := lo.Map(strings.Split(string(text), `,`), func(item string, index int) kv {
-		ss := lo.Map(strings.SplitN(item, `:`, 2), func(item string, index int) string { return strings.TrimSpace(item) })
+	ress := lo.Map(strings.Split(string(text), `,`), func(item string, _ int) kv {
+		ss := lo.Map(strings.SplitN(item, `:`, 2), func(item string, _ int) string { return strings.TrimSpace(item) })
+		if len(ss) < 2 {
+			return kv{}
+		}
 		return kv{k: service(ss[0]), v: totpTok(ss[1])}
 	})
+	if lo.Contains(ress, kv{}) {
+		return fmt.Errorf("parse failed, text=%s", text)
+	}
 	t.m = lo.Associate(ress, func(item kv) (service, totpTok) { return item.k, item.v })
 	return nil
 }
-func (s service) String() string { return string(s) }
 
 func main() {
 	config := &Config{}
@@ -89,6 +95,6 @@ func main() {
 	logger.Info("start listening")
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
-	<-stop
-	logger.Info("stop signal handle")
+	s := <-stop
+	logger.Info("handle stop signal", zap.Stringer("signal", s))
 }
