@@ -3,7 +3,7 @@ module github.com/ueckoken/discotp
 go 1.19
 
 require (
-	github.com/bwmarrin/discordgo v0.27.0
+	github.com/bwmarrin/discordgo v0.27.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/pquerna/otp v1.4.0
 	github.com/samber/lo v1.37.0
