@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/bwmarrin/discordgo v0.28.1
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/pquerna/otp v1.4.0
 	github.com/samber/lo v1.39.0
