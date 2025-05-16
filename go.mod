@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/pquerna/otp v1.4.0
+	github.com/pquerna/otp v1.5.0
 	github.com/samber/lo v1.50.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
