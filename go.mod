@@ -1,9 +1,10 @@
 module github.com/ueckoken/discotp
 
-go 1.19
+go 1.26.0
 
 require (
 	github.com/bwmarrin/discordgo v0.29.0
+	github.com/caarlos0/env/v11 v11.4.2
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/pquerna/otp v1.5.0
 	github.com/samber/lo v1.53.0
